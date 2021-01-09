@@ -1,9 +1,15 @@
 package com.nguy4130;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,35 +27,57 @@ public class TicTacToe implements ActionListener {
   static String O = "O";
   static Color MAROON = new Color(128, 0, 0, 255);
   static Color GOLD = new Color(255, 215, 0, 255);
+  static String HUMAN = "human";
+  static String AI = "ai";
+  final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
   /**
    * GUI components
    */
   Random random = new Random();
-  JFrame frame = new JFrame();
+  JFrame gameFrame = new JFrame();
+  JFrame menuFrame = new JFrame();
   JPanel titlePanel = new JPanel();
+  JPanel optionPanel = new JPanel();
+  JButton humanVsHumanButton = new JButton("Player 1 vs Player 2");
+  JButton humanVsAiButton = new JButton("Player vs AI");
+  JButton restartButton = new JButton("Restart");
   JPanel squaresPanel = new JPanel();
-  JLabel textfield = new GradientLabel("Tic-Tac-Toe", MAROON, GOLD);
+  JLabel textField = new GradientLabel("Tic-Tac-Toe", MAROON, GOLD);
+  JLabel test = new GradientLabel("Tic-Tac-Toe", MAROON, GOLD);
   JButton[][] buttons = new JButton[3][3];
-  boolean humanTurn;
-
+  boolean player1Turn;
+  String player1 = X;
+  String player2 = O;
+  int playingMode = 0; // 1 for p1vsp2 and 2 for p1vsAI
 
   TicTacToe() {
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setSize(800, 800);
-    frame.getContentPane().setBackground(new Color(50, 50, 50));
-    frame.setLayout(new BorderLayout());
-    frame.setVisible(true);
 
-    textfield.setBackground(new Color(25, 25, 25));
-    textfield.setForeground(new Color(25, 255, 0));
-    textfield.setFont(new Font("Ink Free", Font.BOLD, 75));
-    textfield.setHorizontalAlignment(JLabel.CENTER);
-    textfield.setText("Tic-Tac-Toe");
-    textfield.setOpaque(true);
+    gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    gameFrame.setTitle("Tic-Tac-Toe");
+    gameFrame.setSize(800, 800);
+    gameFrame.getContentPane().setBackground(new Color(50, 50, 50));
+    gameFrame.setLayout(new BorderLayout());
+    gameFrame.setVisible(true);
+
+    textField.setForeground(Color.BLACK);
+    textField.setFont(new Font("Ink Free", Font.BOLD, 75));
+    textField.setHorizontalAlignment(JLabel.CENTER);
+    textField.setText("Choose Playing Mode");
+    textField.setOpaque(false);
 
     titlePanel.setLayout(new BorderLayout());
     titlePanel.setBounds(0, 0, 800, 100);
+
+    humanVsAiButton.addActionListener(this);
+    humanVsHumanButton.addActionListener(this);
+    restartButton.addActionListener(this);
+
+    optionPanel.setLayout(new FlowLayout());
+    optionPanel.setBounds(0,0, 800,50);
+    optionPanel.add(humanVsAiButton);
+    optionPanel.add(humanVsHumanButton);
+    optionPanel.add(restartButton);
 
     squaresPanel.setLayout(new GridLayout(3, 3));
     squaresPanel.setBackground(new Color(150, 150, 150));
@@ -58,39 +86,67 @@ public class TicTacToe implements ActionListener {
       for (int j = 0; j < buttons[i].length; j++) {
         buttons[i][j] = new JButton();
         squaresPanel.add(buttons[i][j]);
-        buttons[i][j].setFont(new Font("Menlo for Powerline", Font.BOLD, 120));
+        buttons[i][j].setFont(new Font("Ink Free", Font.BOLD, 120));
         buttons[i][j].setFocusable(false);
         buttons[i][j].addActionListener(this);
+        buttons[i][j].setEnabled(false);
       }
     }
 
-    titlePanel.add(textfield);
-    frame.add(titlePanel, BorderLayout.NORTH);
-    frame.add(squaresPanel);
+    titlePanel.add(textField, BorderLayout.NORTH);
+    titlePanel.add(optionPanel, BorderLayout.SOUTH);
 
-    firstTurn();
+    gameFrame.add(titlePanel, BorderLayout.NORTH);
+    gameFrame.add(squaresPanel, BorderLayout.CENTER);
+
+
+
+//    firstTurn();
   }
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    for (int i = 0; i < buttons.length; i++) {
-      for (int j = 0; j < buttons[i].length; j++) {
-        if (e.getSource() == buttons[i][j]) {
-          if (humanTurn) {
-            if (buttons[i][j].getText().length() == 0) {
-              buttons[i][j].setForeground(MAROON);
-              buttons[i][j].setText(X);
-              humanTurn = false;
-              textfield.setText("O turn");
-              check();
-            }
-          } else {
-            if (buttons[i][j].getText().length() == 0) {
-              buttons[i][j].setForeground(GOLD);
-              buttons[i][j].setText(O);
-              humanTurn = true;
-              textfield.setText("X turn");
-              check();
+    Object source = e.getSource();
+    if (source == humanVsAiButton) {
+      test.setText("Helooooo");
+      LOGGER.log(Level.INFO, "Playing against AI");
+      textField.setText("Human vs AI");
+      humanVsAiButton.setEnabled(false);
+      humanVsHumanButton.setEnabled(false);
+      enableSquares(true);
+    } else if (source == humanVsHumanButton) {
+      LOGGER.log(Level.INFO, "Playing against another player");
+      textField.setText("Player 1 vs Player 2");
+      humanVsAiButton.setEnabled(false);
+      humanVsHumanButton.setEnabled(false);
+      enableSquares(true);
+      firstTurn();
+    } else if (source == restartButton) {
+      LOGGER.log(Level.INFO, "Restarting the game");
+      enableSquares(false);
+      humanVsHumanButton.setEnabled(true);
+      humanVsAiButton.setEnabled(true);
+      textField.setText("Choose Playing Mode");
+    } else if (source instanceof JButton) {
+      for (int i = 0; i < buttons.length; i++) {
+        for (int j = 0; j < buttons[i].length; j++) {
+          if (source == buttons[i][j]) {
+            if (player1Turn) {
+              if (buttons[i][j].getText().length() == 0) {
+                buttons[i][j].setForeground(MAROON);
+                buttons[i][j].setText(X);
+                player1Turn = false;
+                textField.setText(player2 + " turn");
+                check();
+              }
+            } else {
+              if (buttons[i][j].getText().length() == 0) {
+                buttons[i][j].setForeground(GOLD);
+                buttons[i][j].setText(O);
+                player1Turn = true;
+                textField.setText(player1 + " turn");
+                check();
+              }
             }
           }
         }
@@ -98,21 +154,37 @@ public class TicTacToe implements ActionListener {
     }
   }
 
+  public void enableSquares(boolean on) {
+    for (JButton[] squaresRow : buttons) {
+      for (JButton square : squaresRow) {
+        if (!on) {
+          square.setText("");
+        }
+        square.setEnabled(on);
+      }
+    }
+  }
+  public void preGame() {
+    textField.setText("Choose Playing Mode");
+  }
+
   public void firstTurn() {
 
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
+//    try {
+//      Thread.sleep(2000);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
+//    textfield.setText("Choose Playing Mode");
     if (random.nextInt(2) == 0) {
-      humanTurn = true;
-      textfield.setText("X turn");
+      // Human's turn
+      player1Turn = true;
+      textField.setText("X turn");
 
     } else {
-      humanTurn = false;
-      textfield.setText("O turn");
+      // AI's turn
+      player1Turn = false;
+      textField.setText("O turn");
     }
   }
 
@@ -205,9 +277,9 @@ public class TicTacToe implements ActionListener {
       }
     }
     if (player.equals(X)) {
-      textfield.setText("X wins!");
+      textField.setText("X wins!");
     } else {
-      textfield.setText("O wins!");
+      textField.setText("O wins!");
     }
   }
 
@@ -217,7 +289,7 @@ public class TicTacToe implements ActionListener {
         square.setEnabled(false);
       }
     }
-    textfield.setText("Draw!");
+    textField.setText("Draw!");
   }
 
   public void bestMove() {
