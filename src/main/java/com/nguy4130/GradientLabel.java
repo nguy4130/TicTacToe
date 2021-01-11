@@ -29,28 +29,74 @@ public class GradientLabel extends JLabel {
     this.end = end;
   }
 
+//  @Override
+//  public void setText(String s) {
+//    super.setText(s);
+//  }
+
+  @Override
   public void paint(Graphics g) {
-    int width = getWidth();
-    int height = getHeight();
+    if (g instanceof Graphics2D) {
 
-    // Create the gradient paint
-    GradientPaint paint = new GradientPaint(0, 0, start, width, height, end, false);
+      int width = getWidth();
+      int height = getHeight();
 
-    // Need to cast to Graphics2D
-    Graphics2D g2d = (Graphics2D) g;
+      // Create the gradient paint
+      GradientPaint paint = new GradientPaint(0, 0, this.start, width, height, this.end, false);
 
-    // Save old paint
-    Paint oldPaint = g2d.getPaint();
+      // Need to cast to Graphics2D
+      Graphics2D g2d = (Graphics2D) g;
 
-    // Set the paint to use
-    g2d.setPaint(paint);
+      // Save old paint
+      Paint oldPaint = g2d.getPaint();
 
-    // Fill the background using paint
-    g2d.fillRect(0, 0, width, height);
+      // Set the paint to use
+      g2d.setPaint(paint);
 
-    // Restore the original paint
-    g2d.setPaint(oldPaint);
+      // Fill the background using paint
+      g2d.fillRect(0, 0, width, height);
 
-    super.paint(g);
+      // Restore the original paint
+      g2d.setPaint(oldPaint);
+      super.paint(g);
+    }
+    else {
+      super.paint(g);
+    }
+
+
+  }
+
+  @Override
+  public void paintComponent(Graphics g) {
+    if (g instanceof Graphics2D) {
+
+      int width = getWidth();
+      int height = getHeight();
+
+      // Create the gradient paint
+      GradientPaint paint = new GradientPaint(0, 0, this.start, width, height, this.end, false);
+
+      // Need to cast to Graphics2D
+      Graphics2D g2d = (Graphics2D) g;
+
+      // Save old paint
+      Paint oldPaint = g2d.getPaint();
+
+      // Set the paint to use
+      g2d.setPaint(paint);
+
+      // Fill the background using paint
+      g2d.fillRect(0, 0, width, height);
+
+      // Restore the original paint
+      g2d.setPaint(oldPaint);
+
+      super.paintComponent(g);
+    }
+    else {
+      super.paintComponent(g);
+    }
+
   }
 }

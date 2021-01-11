@@ -7,6 +7,8 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,8 +29,12 @@ public class TicTacToe implements ActionListener {
   static String O = "O";
   static Color MAROON = new Color(128, 0, 0, 255);
   static Color GOLD = new Color(255, 215, 0, 255);
-  static String HUMAN = "human";
-  static String AI = "ai";
+  static int HUMAN_MODE = 1;
+  static int AI_MODE = 2;
+  static String HUMAN = "Player";
+  static String AI = "AI";
+  static String HUMAN_1 = "Player 1";
+  static String HUMAN_2 = "Player 2";
   final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
   /**
@@ -36,7 +42,6 @@ public class TicTacToe implements ActionListener {
    */
   Random random = new Random();
   JFrame gameFrame = new JFrame();
-  JFrame menuFrame = new JFrame();
   JPanel titlePanel = new JPanel();
   JPanel optionPanel = new JPanel();
   JButton humanVsHumanButton = new JButton("Player 1 vs Player 2");
@@ -47,9 +52,10 @@ public class TicTacToe implements ActionListener {
   JLabel test = new GradientLabel("Tic-Tac-Toe", MAROON, GOLD);
   JButton[][] buttons = new JButton[3][3];
   boolean player1Turn;
-  String player1 = X;
-  String player2 = O;
+  TicTacToePlayer player1;
+  TicTacToePlayer player2;
   int playingMode = 0; // 1 for p1vsp2 and 2 for p1vsAI
+  boolean playingWithAI;
 
   TicTacToe() {
 
@@ -108,50 +114,82 @@ public class TicTacToe implements ActionListener {
   public void actionPerformed(ActionEvent e) {
     Object source = e.getSource();
     if (source == humanVsAiButton) {
-      test.setText("Helooooo");
       LOGGER.log(Level.INFO, "Playing against AI");
       textField.setText("Human vs AI");
       humanVsAiButton.setEnabled(false);
       humanVsHumanButton.setEnabled(false);
       enableSquares(true);
-    } else if (source == humanVsHumanButton) {
+      player1 = new TicTacToePlayer(HUMAN, X);
+      player2 = new TicTacToePlayer(AI, O);
+      playingWithAI = true;
+      firstTurn();
+    }
+    else if (source == humanVsHumanButton) {
       LOGGER.log(Level.INFO, "Playing against another player");
       textField.setText("Player 1 vs Player 2");
       humanVsAiButton.setEnabled(false);
       humanVsHumanButton.setEnabled(false);
       enableSquares(true);
+      player1 = new TicTacToePlayer(HUMAN_1, X);
+      player2 = new TicTacToePlayer(HUMAN_2, O);
+      playingMode = HUMAN_MODE;
+      playingWithAI = false;
       firstTurn();
-    } else if (source == restartButton) {
+    }
+    else if (source == restartButton) {
       LOGGER.log(Level.INFO, "Restarting the game");
       enableSquares(false);
       humanVsHumanButton.setEnabled(true);
       humanVsAiButton.setEnabled(true);
       textField.setText("Choose Playing Mode");
-    } else if (source instanceof JButton) {
+    }
+    else if (source instanceof JButton) {
       for (int i = 0; i < buttons.length; i++) {
         for (int j = 0; j < buttons[i].length; j++) {
           if (source == buttons[i][j]) {
-            if (player1Turn) {
-              if (buttons[i][j].getText().length() == 0) {
+            if (buttons[i][j].getText().length() == 0) {
+              if (player1Turn) {
                 buttons[i][j].setForeground(MAROON);
                 buttons[i][j].setText(X);
                 player1Turn = false;
-                textField.setText(player2 + " turn");
-                check();
+                textField.setText(player2.getName() + "'s turn");
+                if(playingWithAI) {
+                  makeAIMove();
+                }
               }
-            } else {
-              if (buttons[i][j].getText().length() == 0) {
+              else if(!playingWithAI) {
                 buttons[i][j].setForeground(GOLD);
                 buttons[i][j].setText(O);
                 player1Turn = true;
-                textField.setText(player1 + " turn");
-                check();
+                textField.setText(player1.getName() + "'s turn");
               }
+              check();
             }
           }
         }
       }
     }
+  }
+
+  public void makeAIMove() {
+    player1Turn = false;
+    textField.setText(player2.getName() + "'s turn");
+    List<JButton> emptyList = new ArrayList<>();
+    int emptyNum = 0;
+    for(JButton[] squareRow : buttons) {
+      for(JButton button : squareRow) {
+        if(button.getText().length() == 0) {
+          emptyList.add(button);
+          emptyNum++;
+        }
+      }
+    }
+
+    int chosenAISquare = random.nextInt(emptyNum);
+    emptyList.get(chosenAISquare).setForeground(GOLD);
+    emptyList.get(chosenAISquare).setText(O);
+    player1Turn = true;
+    textField.setText(player1.getName() + "'s turn");
   }
 
   public void enableSquares(boolean on) {
@@ -179,12 +217,15 @@ public class TicTacToe implements ActionListener {
     if (random.nextInt(2) == 0) {
       // Human's turn
       player1Turn = true;
-      textField.setText("X turn");
+      textField.setText(player1.getName() +"'s turn");
 
     } else {
       // AI's turn
       player1Turn = false;
-      textField.setText("O turn");
+      textField.setText(player2.getName() + "'s turn");
+      if(playingWithAI) {
+        makeAIMove();
+      }
     }
   }
 
@@ -277,9 +318,9 @@ public class TicTacToe implements ActionListener {
       }
     }
     if (player.equals(X)) {
-      textField.setText("X wins!");
+      textField.setText(player1.getName() + " wins!");
     } else {
-      textField.setText("O wins!");
+      textField.setText(player2.getName() + " wins!");
     }
   }
 
@@ -291,6 +332,7 @@ public class TicTacToe implements ActionListener {
     }
     textField.setText("Draw!");
   }
+
 
   public void bestMove() {
     // AI's turn
