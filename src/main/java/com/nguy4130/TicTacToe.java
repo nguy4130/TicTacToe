@@ -7,8 +7,6 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -152,7 +150,7 @@ public class TicTacToe implements ActionListener {
                 buttons[i][j].setForeground(MAROON);
                 buttons[i][j].setText(X);
                 player1Turn = false;
-                textField.setText(player2.getName() + "'s turn");
+                check();
                 if(playingWithAI) {
                   makeAIMove();
                 }
@@ -162,8 +160,9 @@ public class TicTacToe implements ActionListener {
                 buttons[i][j].setText(O);
                 player1Turn = true;
                 textField.setText(player1.getName() + "'s turn");
+                check();
               }
-              check();
+
             }
           }
         }
@@ -171,25 +170,36 @@ public class TicTacToe implements ActionListener {
     }
   }
 
-  public void makeAIMove() {
-    player1Turn = false;
-    textField.setText(player2.getName() + "'s turn");
-    List<JButton> emptyList = new ArrayList<>();
-    int emptyNum = 0;
-    for(JButton[] squareRow : buttons) {
-      for(JButton button : squareRow) {
-        if(button.getText().length() == 0) {
-          emptyList.add(button);
-          emptyNum++;
+  public char[][] encodeButtons() {
+    char[][] board = new char[3][3];
+    for(int i = 0; i < 3; i++){
+      for(int j = 0; j < 3; j++) {
+        if(buttons[i][j].getText().length() == 0){
+          board[i][j] = '.';
+        }
+        else {
+          board[i][j] = buttons[i][j].getText().toCharArray()[0];
         }
       }
     }
+    return board;
+  }
 
-    int chosenAISquare = random.nextInt(emptyNum);
-    emptyList.get(chosenAISquare).setForeground(GOLD);
-    emptyList.get(chosenAISquare).setText(O);
-    player1Turn = true;
-    textField.setText(player1.getName() + "'s turn");
+  public void makeAIMove() {
+    player1Turn = false;
+    char[][] board = encodeButtons();
+    if(isMoveLeft(board)){
+      textField.setText(player2.getName() + "'s turn");
+      int[] move = bestMove(board);
+      buttons[move[0]][move[1]].setForeground(GOLD);
+      buttons[move[0]][move[1]].setText(O);
+      player1Turn = true;
+      textField.setText(player1.getName() + "'s turn");
+      check();
+    }
+    else {
+      announceDraw();
+    }
   }
 
   public void enableSquares(boolean on) {
@@ -202,27 +212,18 @@ public class TicTacToe implements ActionListener {
       }
     }
   }
-  public void preGame() {
-    textField.setText("Choose Playing Mode");
-  }
 
   public void firstTurn() {
-
-//    try {
-//      Thread.sleep(2000);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
-//    textfield.setText("Choose Playing Mode");
     if (random.nextInt(2) == 0) {
-      // Human's turn
+      // Player 1/ Human turn
       player1Turn = true;
       textField.setText(player1.getName() +"'s turn");
 
     } else {
-      // AI's turn
+      // Player 2's turn
       player1Turn = false;
       textField.setText(player2.getName() + "'s turn");
+      //AI turn
       if(playingWithAI) {
         makeAIMove();
       }
@@ -291,6 +292,7 @@ public class TicTacToe implements ActionListener {
         }
       }
     }
+    System.out.println("Heyyyy");
     announceDraw();
   }
 
@@ -334,9 +336,125 @@ public class TicTacToe implements ActionListener {
   }
 
 
-  public void bestMove() {
-    // AI's turn
-    int bestScore = Integer.MIN_VALUE;
+  public boolean isMoveLeft(char[][] buttons) {
+    for(char[] row : buttons) {
+      for(char button : row) {
+        if(button == '.') {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
+  public int evaluate(char[][] buttons) {
+    for(int row = 0; row < 3; row++) {
+      if(buttons[row][0] == 'X'
+        && buttons[row][1] == 'X'
+        && buttons[row][2] == 'X') {
+        return -1;
+      }
+      else if(buttons[row][0] == 'O'
+              && buttons[row][1] == 'O'
+              && buttons[row][2] == 'O') {
+        return 1;
+      }
+    }
+
+    for(int col = 0; col < 3; col++) {
+      if(buttons[0][col] == 'X'
+              && buttons[1][col] == 'X'
+              && buttons[2][col] == 'X') {
+        return -1;
+      }
+      else if(buttons[0][col] == 'O'
+              && buttons[1][col] == 'O'
+              && buttons[2][col] == 'O') {
+        return 1;
+      }
+    }
+
+    if(buttons[0][0] == 'X'
+            && buttons[1][1] == 'X'
+            && buttons[2][2] == 'X') {
+      return -1;
+    }
+    else if(buttons[0][0] == 'O'
+            && buttons[1][1] == 'O'
+            && buttons[2][2] == 'O') {
+      return 1;
+    }
+
+    if(buttons[0][2] == 'X'
+      && buttons[1][1] == 'X'
+      && buttons[2][0] == 'X') {
+      return -1;
+    }
+    else if(buttons[0][2] == 'O'
+            && buttons[1][1] == 'O'
+            && buttons[2][0] == 'O') {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  public int minimax(char[][] buttons, int depth, boolean isMax) {
+    int score = evaluate(buttons);
+
+    if(score == 1 || score == -1) {
+      return score;
+    }
+
+    if(!isMoveLeft(buttons)) {
+      return 0;
+    }
+
+    if(isMax) {
+      int best = Integer.MIN_VALUE;
+      for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+          if(buttons[i][j] == '.') {
+            buttons[i][j] = 'O';
+            best = Math.max(best, minimax(buttons, depth + 1, false));
+            buttons[i][j] = '.';
+          }
+        }
+      }
+      return best;
+    }
+    else {
+      int best = Integer.MAX_VALUE;
+      for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+          if(buttons[i][j] == '.') {
+            buttons[i][j] = 'X';
+            best = Math.min(best, minimax(buttons, depth + 1, true));
+            buttons[i][j] = '.';
+          }
+        }
+      }
+      return best;
+    }
+  }
+
+  public int[] bestMove(char[][] buttons) {
+    int bestVal = Integer.MIN_VALUE;
+    int[] bestMove = {-1,-1};
+    for(int row = 0; row < 3; row++) {
+      for(int col = 0; col < 3; col++) {
+        if(buttons[row][col] == '.') {
+          buttons[row][col] = 'O';
+          int moveVal = minimax(buttons, 0, false);
+          buttons[row][col] = '.';
+          if(moveVal > bestVal) {
+            bestMove[0] = row;
+            bestMove[1] = col;
+            bestVal = moveVal;
+          }
+        }
+      }
+    }
+    return bestMove;
   }
 }
