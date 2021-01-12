@@ -47,7 +47,6 @@ public class TicTacToe implements ActionListener {
   JButton restartButton = new JButton("Restart");
   JPanel squaresPanel = new JPanel();
   JLabel textField = new GradientLabel("Tic-Tac-Toe", MAROON, GOLD);
-  JLabel test = new GradientLabel("Tic-Tac-Toe", MAROON, GOLD);
   JButton[][] buttons = new JButton[3][3];
   boolean player1Turn;
   TicTacToePlayer player1;
@@ -292,7 +291,6 @@ public class TicTacToe implements ActionListener {
         }
       }
     }
-    System.out.println("Heyyyy");
     announceDraw();
   }
 
@@ -335,7 +333,11 @@ public class TicTacToe implements ActionListener {
     textField.setText("Draw!");
   }
 
-
+  /**
+   * Check if there are still empty square.
+   * @param buttons  the character representation of a board.
+   * @return
+   */
   public boolean isMoveLeft(char[][] buttons) {
     for(char[] row : buttons) {
       for(char button : row) {
@@ -347,6 +349,12 @@ public class TicTacToe implements ActionListener {
     return false;
   }
 
+  /**
+   * Check if the board is in terminate state or draw.
+   *
+   * @param buttons  character representation of a board
+   * @return  the score of a state
+   */
   public int evaluate(char[][] buttons) {
     for(int row = 0; row < 3; row++) {
       if(buttons[row][0] == 'X'
@@ -399,6 +407,15 @@ public class TicTacToe implements ActionListener {
     return 0;
   }
 
+  /**
+   * Minimax algorithm that return the value of a move. Inspired from
+   * https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-3-tic-tac-toe-ai-finding-optimal-move/
+   *
+   * @param buttons  character representation of the board
+   * @param depth  depth in the game tree
+   * @param isMax  flag for maximize/minimize level
+   * @return  the score of a move
+   */
   public int minimax(char[][] buttons, int depth, boolean isMax) {
     int score = evaluate(buttons);
 
@@ -438,6 +455,13 @@ public class TicTacToe implements ActionListener {
     }
   }
 
+  /**
+   * Function that return the (x,y) location of the best next move according
+   * to Minimax. Inspired from https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-3-tic-tac-toe-ai-finding-optimal-move/
+   *
+   * @param buttons  the character representation of the tic-tac-toe board
+   * @return  the location of the most optimal play
+   */
   public int[] bestMove(char[][] buttons) {
     int bestVal = Integer.MIN_VALUE;
     int[] bestMove = {-1,-1};
