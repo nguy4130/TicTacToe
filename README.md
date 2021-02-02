@@ -7,3 +7,4 @@
 - [X] Create a selection menu between human-vs-human and human-vs-AI
 - [X] Add in an AI that randomly chooses the next move
 - [X] Modify the AI so that it chooses the next best move using Minimax
+- [ ] Build an Android app using Flutter
